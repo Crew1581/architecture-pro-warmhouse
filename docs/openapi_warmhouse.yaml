@@ -1,0 +1,182 @@
+openapi: 3.0.3
+info:
+  title: Warm House API
+  version: 0.1.0
+  description: >-
+    API Gateway, агрегирующий команды управления отоплением и ingest телеметрии
+    для платформы «Тёплый дом». Покрывает MVP-функциональность.
+servers:
+  - url: https://api.warmhouse.example.com
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Auth success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+  /devices/{deviceId}:
+    get:
+      summary: Get device details
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '200':
+          description: Device found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '404':
+          description: Device not found
+  /devices/{deviceId}/state:
+    patch:
+      summary: Change heating state (on/off)
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HeatingCommand'
+      responses:
+        '200':
+          description: State changed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '400':
+          description: Validation error
+        '404':
+          description: Device not found
+  /telemetry:
+    post:
+      summary: Ingest telemetry sample
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelemetrySample'
+      responses:
+        '202':
+          description: Accepted for processing
+  /devices/{deviceId}/telemetry:
+    get:
+      summary: Query telemetry history for device
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date-time
+          required: false
+          description: Start timestamp (inclusive)
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date-time
+          required: false
+          description: End timestamp (exclusive)
+      responses:
+        '200':
+          description: Telemetry list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TelemetrySample'
+        '404':
+          description: Device not found
+components:
+  parameters:
+    DeviceId:
+      in: path
+      name: deviceId
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Уникальный идентификатор устройства
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      example:
+        email: user@example.com
+        password: secret
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+          example: 3600
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          example: heater
+        status:
+          type: string
+          example: ON
+        location:
+          type: string
+          example: "Living Room"
+    HeatingCommand:
+      type: object
+      required: [action]
+      properties:
+        action:
+          type: string
+          enum: [ON, OFF]
+      example:
+        action: ON
+    TelemetrySample:
+      type: object
+      required: [device_id, ts, value, unit]
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        ts:
+          type: string
+          format: date-time
+        value:
+          type: number
+        unit:
+          type: string
+          example: "°C"
+      example:
+        device_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        ts: "2025-03-15T08:10:00Z"
+        value: 22.5
+        unit: "°C" 
