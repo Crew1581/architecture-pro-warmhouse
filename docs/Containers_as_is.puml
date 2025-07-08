@@ -1,0 +1,27 @@
+@startuml
+!include <C4/C4_Container>
+
+' Persons
+Person(user, "Пользователь")
+
+' System boundary for Warm House SaaS
+System_Boundary(warmhouse, "Warm House Platform") {
+    Container(api, "API Service", "Go", "REST / gRPC. Точка входа клиентов")
+    Container(heating, "Heating Service", "Go", "Команды к реле, статус")
+    Container(telemetry, "Telemetry Service", "Go", "Приём и хранение показаний")
+    ContainerDb(pg, "Config & Telemetry DB", "PostgreSQL", "Конфигурация + история")
+}
+
+' External device
+System_Ext(device, "Устройства", "Датчики и реле")
+
+' Relationships
+Rel(user, api, "HTTPS")
+Rel(api, heating, "gRPC / REST")
+Rel(api, telemetry, "gRPC / REST")
+Rel(heating, pg, "SQL")
+Rel(telemetry, pg, "SQL")
+Rel_U(heating, device, "HTTP / MQTT команд")
+Rel_U(device, telemetry, "Показания")
+
+@enduml 

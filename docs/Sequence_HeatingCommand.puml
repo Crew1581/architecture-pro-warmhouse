@@ -1,0 +1,19 @@
+@startuml
+actor User
+participant "API Service" as API
+participant "Command Handler" as CH
+participant "State Manager" as SM
+participant "Device Adapter" as DA
+participant "Heating Device" as HD
+
+User -> API: POST /heating/{deviceId}/on
+API -> CH: validate & build Command
+CH -> SM: save pending command
+CH -> DA: send command
+DA -> HD: HTTP PUT /relay/on
+HD --> DA: 200 OK / status
+DA --> CH: delivery result
+CH -> SM: update state (ON)
+CH --> API: success JSON
+API --> User: 200 OK
+@enduml 
