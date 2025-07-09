@@ -48,6 +48,31 @@ services:
     networks:
       - smarthome-network
 
+  devices-service:
+    build:
+      context: ./devices_service
+      dockerfile: Dockerfile
+    container_name: devices-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/smarthome
+    ports:
+      - "8082:8082"
+    networks:
+      - smarthome-network
+
+  telemetry-service:
+    build:
+      context: ./telemetry_service
+      dockerfile: Dockerfile
+    container_name: telemetry-service
+    ports:
+      - "8083:8083"
+    networks:
+      - smarthome-network
+
 volumes:
   postgres_data:
 
