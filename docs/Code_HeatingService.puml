@@ -1,0 +1,28 @@
+@startuml
+!theme plain
+class HeatingService {
+  - db: pgx.Pool
+  + GetSensors(): []Sensor
+  + UpdateSensorValue(id, value): error
+}
+
+class SensorHandler {
+  - svc: HeatingService
+  + GetSensors()
+  + GetSensorByID(id)
+  + UpdateValue(id,value)
+}
+
+class Sensor {
+  id: int
+  name: string
+  type: string
+  location: string
+  value: float
+  unit: string
+  status: string
+}
+
+HeatingService "1" --> "*" Sensor : manages
+SensorHandler --> HeatingService : calls
+@enduml 
