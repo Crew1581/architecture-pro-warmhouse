@@ -1,0 +1,41 @@
+@startuml
+!include <C4/C4_Container>
+
+' Person
+Person(user, "Пользователь")
+Person(admin, "Администратор/Саппорт")
+
+System_Boundary(warmhouse, "Warm House Platform (To-Be)") {
+    Container(api, "API Gateway", "NGINX+Go BFF", "Единая точка входа (REST/GraphQL)")
+    Container(auth, "Auth Service", "Go", "OAuth2, JWT, RBAC")
+    Container(registry, "Device Registry", "Go", "Онбординг устройств, токены")
+    Container(heating, "Heating Service", "Go", "Управление отоплением")
+    Container(telemetry, "Telemetry Service", "Python", "Приём показаний, time-series")
+    Container_Boundary(data, "Data Stores") {
+        ContainerDb(cfgdb, "Config DB", "PostgreSQL", "Пользователи, устройства, политики")
+        ContainerDb(tsdb, "Telemetry DB", "InfluxDB", "История телеметрии")
+    }
+    ContainerQueue(bus, "Event Bus", "Kafka", "События и команды между сервисами")
+}
+
+System_Ext(iot, "IoT-устройства", "Датчики, реле, камеры")
+System_Ext(pay, "Payment Gateway", "Обработка платежей подписки")
+
+' Relationships
+Rel(user, api, "HTTPS/WebSocket")
+Rel(admin, api, "HTTPS (admin UI)")
+
+Rel(api, auth, "gRPC / REST")
+Rel(api, registry, "gRPC")
+Rel(api, heating, "gRPC")
+Rel(api, telemetry, "gRPC")
+
+Rel(auth, cfgdb, "SQL")
+Rel(registry, cfgdb, "SQL")
+Rel(heating, bus, "publish/subscribe")
+Rel(telemetry, tsdb, "write serie")
+Rel(bus, telemetry, "stream sensor data")
+Rel_U(iot, bus, "MQTT bridge")
+Rel(pay, api, "Webhooks")
+
+@enduml 

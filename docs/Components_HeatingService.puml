@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Component>
+
+Container_Boundary(heating, "Heating Service") {
+    Component(api, "REST API", "Gin")
+    Component(cmdHandler, "Command Handler", "Валидирует и публикует команды")
+    Component(stateMgr, "State Manager", "Хранит текущее состояние устройств")
+    Component(adapter, "Device Adapter", "HTTP client к реле")
+    Component(repo, "Config Repository", "PostgreSQL access layer")
+}
+
+Rel(api, cmdHandler, "invoke")
+Rel(cmdHandler, stateMgr, "update state")
+Rel(stateMgr, repo, "SQL")
+Rel(cmdHandler, adapter, "publish command")
+
+@enduml 

@@ -1,0 +1,51 @@
+@startuml
+' ER Diagram for Warm House Platform
+!theme plain
+
+entity "User" as user {
+  *id : UUID <<PK>>
+  email : varchar
+  password_hash : varchar
+  created_at : timestamp
+}
+
+entity "House" as house {
+  *id : UUID <<PK>>
+  user_id : UUID <<FK>>
+  address : varchar
+  name : varchar
+  created_at : timestamp
+}
+
+entity "DeviceType" as dtype {
+  *id : int <<PK>>
+  name : varchar
+  model : varchar
+  description : text
+}
+
+entity "Device" as device {
+  *id : UUID <<PK>>
+  type_id : int <<FK>>
+  house_id : UUID <<FK>>
+  serial_number : varchar
+  status : varchar
+  location : varchar
+  created_at : timestamp
+}
+
+entity "TelemetryData" as telem {
+  *id : bigserial <<PK>>
+  device_id : UUID <<FK>>
+  ts : timestamp
+  value : double
+  unit : varchar
+}
+
+' Relationships
+user ||--o{ house : owns
+house ||--o{ device : contains
+dtype ||--o{ device : categorizes
+device ||--o{ telem : generates
+
+@enduml
